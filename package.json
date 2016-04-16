@@ -3,8 +3,12 @@
   "version": "0.0.1",
   "description": "",
   "main": "index.js",
+  "bin": {
+    "solid-goggles": "./index.js"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "verify": "node ./index.js"
   },
   "repository": {
     "type": "git",
@@ -18,8 +22,11 @@
   "homepage": "https://github.com/bitspill/solid-goggles#readme",
   "dependencies": {
     "acoustid": "^1.2.1",
+    "async": "^2.0.0-rc.3",
+    "commander": "^2.9.0",
     "fpcalc": "^1.2.0",
     "musicbrainz": "^0.2.6",
+    "request": "^2.71.0",
     "twitter": "^1.2.5"
   }
 }
