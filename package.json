@@ -1,0 +1,25 @@
+{
+  "name": "solid-goggles",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bitspill/solid-goggles.git"
+  },
+  "author": "Jeremiah Buddenhagen <bitspill@bitspill.net>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bitspill/solid-goggles/issues"
+  },
+  "homepage": "https://github.com/bitspill/solid-goggles#readme",
+  "dependencies": {
+    "acoustid": "^1.2.1",
+    "fpcalc": "^1.2.0",
+    "musicbrainz": "^0.2.6",
+    "twitter": "^1.2.5"
+  }
+}

@@ -1,3 +1,11 @@
+### IDE
+
+# IntelliJ
+.idea/
+*.iml
+
+### Node
+
 # Logs
 logs
 *.log
