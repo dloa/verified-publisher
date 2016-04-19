@@ -1,5 +1,7 @@
+var async = require("async");
 var request = require("request");
 var Twitter = require("twitter");
+var acoustid = require("acoustid");
 
 var client = new Twitter({
     consumer_key: process.env.TW_CK,
@@ -9,18 +11,21 @@ var client = new Twitter({
 });
 
 
-// AI_K
+var acoustid_key = process.env.AI_K;
 
+function isInString(child, parent, caseSense) {
+    if (caseSense)
+        return -1 != parent.indexOf(child);
+    else
+        return -1 != parent.toLowerCase().indexOf(child.toLowerCase());
+}
 
-// ToDo: Fix the callbacks, it's late.
-
-function find_txID(txID) {
+function find_txID(txID, cb) {
     var payload = {
         "protocol": "publisher",
         "search-on": "txid",
         "search-for": txID
     };
-    var ret = '';
 
     request({
             method: 'POST',
@@ -28,59 +33,102 @@ function find_txID(txID) {
             json: payload
         },
         function (error, response, body) {
-            if (error) {
-                return console.error('failed:', error);
-            }
-            ret = body;
+            if (error)
+                return cb(error);
+
+            cb(null, body);
         });
-
-    return ret; // this is before the callback
 }
 
-function find_tweet(tweetID) {
-    var ret = '';
+function find_tweet(tweetID, cb) {
     client.get('statuses/show', {id: tweetID}, function (error, tweet, response) {
-        if (error) return console.error(error);
-        ret = tweet;
+        if (error)
+            return cb(error);
+
+        cb(null, tweet);
     });
-    return ret; // this is before the callback
 }
 
-function verify_song(tweetID, txID, file) {
+function verify_song(tweetID, txID, file, callback) {
+    async.parallel({
+            vTweet: function (cb) {
+                verify_tweet(tweetID, txID, cb)
+            },
+            song: function (cb) {
+                acoustid(file, {key: acoustid_key}, cb)
+            },
+            tweet: function (cb) {
+                find_tweet(tweetID, cb); // ToDo: avoid duplicate call
+            }
+        },
+        function (err, results) {
+            var ret = results.vTweet;
+            ret.authData.songFound = false;
 
+            if (results.song.length == 0) {
+                return callback(ret);
+            }
+
+            for (var song of results.song) {
+                for (var recording of song.recordings) {
+                    for (var artist of recording.artists) {
+                        if (isInString(artist.name,results.tweet.text,  false)) {
+                            ret.authData.songFound = true;
+                            return callback(null, ret);
+                        }
+                    }
+                }
+            }
+
+            return callback(null, ret);
+        });
 }
 
-function verify_tweet(tweetID, txID) {
-    var txInfo = find_txID(txID);
-    var tweet = find_tweet(tweetID);
+function verify_tweet(tweetID, txID, callback) {
+    async.parallel({
+            tx: function (cb) {
+                find_txID(txID, cb)
+            },
+            tweet: function (cb) {
+                find_tweet(tweetID, cb);
+            }
+        },
+        function (err, results) {
+            var ret = {
+                authData: {
+                    foundTxID: false,
+                    foundName: false,
+                    verified: results.tweet.user.verified
+                }
+            };
 
-    // Fix the callbacks or there are no results from find_*
 
-    var result = {
-        authData:{
-            foundTxID: false,
-            foundName: false,
-            verified: tweet.user.verified
-        }
-    };
+            // tweet does not contain tx id
+            if (!isInString(txID, results.tweet.text, false)) {
+                return callback(null, ret);
+            }
+            else {
+                ret.authData.foundTxID = true;
+            }
 
+            // tweet does not contain publisher name
+            if (!isInString(results.tx.response[0]["publisher-data"]["alexandria-publisher"]["name"], results.tweet.text, false)) {
+                return callback(null, ret);
+            }
+            else {
+                ret.authData.foundName = true;
+            }
 
+            return callback(null, ret);
+        });
+}
 
-    // tweet does not contain tx id
-    if (tweet.text.toLowerCase().indexOf(txID.toLowerCase())!=-1)
-        return result;
+function actionCallback(err, result) {
+    if (err)
+        console.error(err);
     else
-        result.authData.foundTxID = true;
-
-    // tweet does not contain publisher name
-    if (tweet.text.toLowerCase().indexOf(txInfo[0]["response"][0]["publisher-data"]["alexandria-publisher"]["name"].toLowerCase()) == -1)
-        return result;
-    else
-        result.authData.foundName = true;
-
-
+        console.log(result)
 }
-
 
 var program = require('commander');
 
@@ -88,9 +136,9 @@ program
     .command("verify <tweetID> <txID> [file]")
     .action(function (tweetID, txID, file) {
         if (file)
-            verify_song(tweetID, txID, file);
+            verify_song(tweetID, txID, file, actionCallback);
         else
-            verify_tweet(tweetID, txID)
+            verify_tweet(tweetID, txID, actionCallback)
     });
 
 
