@@ -1,5 +1,5 @@
 {
-  "name": "solid-goggles",
+  "name": "verified-publisher",
   "version": "0.0.1",
   "description": "",
   "main": "index.js",
@@ -12,14 +12,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bitspill/solid-goggles.git"
+    "url": "git+https://github.com/bitspill/verified-publisher.git"
   },
   "author": "Jeremiah Buddenhagen <bitspill@bitspill.net>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/bitspill/solid-goggles/issues"
+    "url": "https://github.com/bitspill/verified-publisher/issues"
   },
-  "homepage": "https://github.com/bitspill/solid-goggles#readme",
+  "homepage": "https://github.com/bitspill/verified-publisher#readme",
   "dependencies": {
     "acoustid": "^1.2.1",
     "async": "^2.0.0-rc.3",

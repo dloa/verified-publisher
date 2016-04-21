@@ -1,1 +1,1 @@
-# solid-goggles
+# verified-publisher
